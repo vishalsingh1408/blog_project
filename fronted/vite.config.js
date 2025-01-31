@@ -1,7 +1,13 @@
 import { defineConfig } from 'vite'
-import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/plugin-react'
+import { config } from 'dotenv';
+config();
+
+// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    tailwindcss(),
-  ],
+  plugins: [react(),tailwindcss()],
+  server: {  host: '0.0.0.0',port: 5173 },
+  define: {
+    'process.env': process.env
+  }
 })
