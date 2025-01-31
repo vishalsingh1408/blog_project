@@ -1,0 +1,37 @@
+name: Deploy to Self-Hosted Server
+
+on:
+  workflow_run:
+    workflows: ["Docker Image CI"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    runs-on: self-hosted  # Use self-hosted runner
+
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Pull latest Docker images
+      run: |
+        docker pull ${{ secrets.DOCKER_USERNAME }}/vite-frontend:latest
+        docker pull ${{ secrets.DOCKER_USERNAME }}/node-backend:latest
+
+    - name: Stop and remove old containers
+      run: |
+        docker stop vite-frontend || true
+        docker stop node-backend || true
+        docker rm vite-frontend || true
+        docker rm node-backend || true
+
+    - name: Run new containers
+      run: |
+        docker run -d --name vite-frontend -p 80:5173 --restart unless-stopped ${{ secrets.DOCKER_USERNAME }}/vite-frontend:latest
+        docker run -d --name node-backend -p 4000:4000 --restart unless-stopped ${{ secrets.DOCKER_USERNAME }}/node-backend:latest
+
+    - name: Clean up old images
+      run: docker image prune -f
