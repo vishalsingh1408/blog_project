@@ -1,0 +1,40 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Log in to Docker Hub
+      env:
+        DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASS: ${{ secrets.DOCKER_PASSWORD }}
+      run: echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Get short SHA
+      id: vars
+      run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+    - name: Build and push Frontend Docker image
+      run: |
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/vite-frontend:${{ env.sha_short }} -t ${{ secrets.DOCKER_USERNAME }}/vite-frontend:latest ./frontend
+        docker push ${{ secrets.DOCKER_USERNAME }}/vite-frontend:${{ env.sha_short }}
+        docker push ${{ secrets.DOCKER_USERNAME }}/vite-frontend:latest
+
+    - name: Build and push Backend Docker image
+      run: |
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/node-backend:${{ env.sha_short }} -t ${{ secrets.DOCKER_USERNAME }}/node-backend:latest ./backend
+        docker push ${{ secrets.DOCKER_USERNAME }}/node-backend:${{ env.sha_short }}
+        docker push ${{ secrets.DOCKER_USERNAME }}/node-backend:latest
