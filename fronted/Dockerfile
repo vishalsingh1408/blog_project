@@ -15,7 +15,7 @@ COPY . .
 
 
 # Expose the port Vite uses (default 5173 for dev, 4173 for preview)
-EXPOSE 5173
+EXPOSE 4173
 
 # Start the app in production mode
 CMD ["npm", "run", "dev"]
